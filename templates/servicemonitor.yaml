@@ -1,5 +1,5 @@
 {{- if .Values.metrics.prometheus }}
-{{- if .Values.metrics.prometheus.serviceMonitor }}
+{{- if (.Values.metrics.prometheus.serviceMonitor).enabled }}
   {{- if (not (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1")) }}
     {{- if (not (.Values.metrics.prometheus.disableAPICheck)) }}
       {{- fail "ERROR: You have to deploy monitoring.coreos.com/v1 first" }}
@@ -9,11 +9,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ template "traefik.fullname" . }}
-  {{- with .Values.metrics.prometheus.serviceMonitor.namespace }}
-  namespace: {{ . }}
-  {{- end }}
+  namespace: {{ .Values.metrics.prometheus.serviceMonitor.namespace | default (include "traefik.namespace" .) }}
   labels:
-    {{- if (and (.Values.metrics.prometheus.service).enabled (not .Values.hub.enabled)) }}
+    {{- if (.Values.metrics.prometheus.service).enabled }}
     {{- include "traefik.metricsservicelabels" . | nindent 4 }}
     {{- else }}
     {{- include "traefik.labels" . | nindent 4 }}
@@ -24,7 +22,7 @@ metadata:
 spec:
   jobLabel: {{ .Values.metrics.prometheus.serviceMonitor.jobLabel | default .Release.Name }}
   endpoints:
-    - port: metrics
+    - targetPort: metrics
       path: /{{ .Values.metrics.prometheus.entryPoint }}
       {{- with .Values.metrics.prometheus.serviceMonitor.honorLabels }}
       honorLabels: {{ . }}
@@ -62,7 +60,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- if (and (.Values.metrics.prometheus.service).enabled (not .Values.hub.enabled)) }}
+      {{- if (.Values.metrics.prometheus.service).enabled }}
       {{- include "traefik.metricslabelselector" . | nindent 6 }}
       {{- else }}
       {{- include "traefik.labelselector" . | nindent 6 }}
