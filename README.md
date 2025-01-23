@@ -46,6 +46,25 @@ helm template . | grep -A 14 -B 3 Horizontal
 It should produce this output:
 
 ```yaml
+---
+# Source: foo/charts/traefik/templates/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: release-name-traefik
+  namespace: flux-system
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: release-name-flux-system
+    helm.sh/chart: traefik-24.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: release-name-traefik
+  maxReplicas: 3
+```
 
 2. 생성된 chart에서 charts/traefik-${version}.tgz 파일만 별도위치에 저장해둔다.
 ```bash
@@ -68,25 +87,6 @@ dependencies:
   - name: traefik
     version: 34.1.0
     repository: https://traefik.github.io/charts
-```
----
-# Source: foo/charts/traefik/templates/hpa.yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: release-name-traefik
-  namespace: flux-system
-  labels:
-    app.kubernetes.io/name: traefik
-    app.kubernetes.io/instance: release-name-flux-system
-    helm.sh/chart: traefik-24.0.0
-    app.kubernetes.io/managed-by: Helm
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: release-name-traefik
-  maxReplicas: 3
 ```
 
 # Traefik 23.0.1
